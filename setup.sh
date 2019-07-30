@@ -18,6 +18,9 @@
 # SETUP OF CLIENT                                                              #
 # ############################################################################ #
 
+set -e
+set -x
+
 ROOT=`pwd`/client
 BINARY_FOLDER="bin"
 INSTALL_PATH_PAPI=${ROOT}/${BINARY_FOLDER}/papi
@@ -36,22 +39,28 @@ PAPI_VERSION="5.4.0"
 CURL="curl"
 CURL_VERSION="7.37.0"
 APR="apr"
-APR_VERSION="1.5.2"
+APR_VERSION="1.7.0"
 APR_UTIL="apr-util"
-APR_UTIL_VERSION="1.5.4"
+APR_UTIL_VERSION="1.6.1"
 EXCESS_QUEUE_VERSION=release/0.1.0
+BISON=bison
+BISON_VERSION=3.4.1
+FLEX=flex
+FLEX_VERSION=2.6.0
+LM_SENSORS=lm-sensors
+LM_SENSORS_VERSION=3-5-0
 
 # ============================================================================ #
 # DOWNLOAD AND INSTALL PAPI-C                                                  #
 # ============================================================================ #
 
 cd $ROOT
-wget http://icl.cs.utk.edu/projects/papi/downloads/${PAPI}-${PAPI_VERSION}.tar.gz
+wget http://icl.cs.utk.edu/projects/papi/downloads/${PAPI}-${PAPI_VERSION}.tar.gz -O ${PAPI}-${PAPI_VERSION}.tar.gz
 if [ ! -f ${PAPI}-${PAPI_VERSION}.tar.gz ]; then
     echo "[ERROR] File not found: " ${PAPI}-${PAPI_VERSION}.tar.gz
     exit 1;
 fi
-tar zxvf ${PAPI}-${PAPI_VERSION}.tar.gz
+tar zxf ${PAPI}-${PAPI_VERSION}.tar.gz
 cd ${PAPI}-${PAPI_VERSION}/src
 ./configure --prefix=${INSTALL_PATH_PAPI} --with-components="rapl coretemp infiniband"
 make
@@ -62,12 +71,12 @@ make install all
 # ============================================================================ #
 
 cd $ROOT
-wget http://curl.haxx.se/download/${CURL}-${CURL_VERSION}.tar.gz
+wget http://curl.haxx.se/download/${CURL}-${CURL_VERSION}.tar.gz -O ${CURL}-${CURL_VERSION}.tar.gz
 if [ ! -f ${CURL}-${CURL_VERSION}.tar.gz ]; then
     echo "[ERROR] File not found: " ${CURL}-${CURL_VERSION}.tar.gz
     exit 1;
 fi
-tar zxvf ${CURL}-${CURL_VERSION}.tar.gz
+tar zxf ${CURL}-${CURL_VERSION}.tar.gz
 cd ${CURL}-${CURL_VERSION}
 ./configure --prefix=${INSTALL_PATH_CURL}
 make
@@ -79,7 +88,7 @@ make install all
 # ============================================================================ #
 
 cd $ROOT
-wget http://www.eu.apache.org/dist/apr/${APR}-${APR_VERSION}.tar.gz
+wget http://apache.crihan.fr/dist/apr/${APR}-${APR_VERSION}.tar.gz -O ${APR}-${APR_VERSION}.tar.gz
 if [ ! -f ${APR}-${APR_VERSION}.tar.gz ]; then
     echo "[ERROR] File not found: " ${APR}-${APR_VERSION}.tar.gz
     exit 1;
@@ -96,7 +105,7 @@ make install all
 # ============================================================================ #
 
 cd $ROOT
-wget http://www.eu.apache.org/dist//apr/apr-util-1.5.4.tar.gz
+wget http://apache.crihan.fr/dist/apr/${APR_UTIL}-${APR_UTIL_VERSION}.tar.gz -O ${APR_UTIL}-${APR_UTIL_VERSION}.tar.gz
 if [ ! -f ${APR_UTIL}-${APR_UTIL_VERSION}.tar.gz ]; then
     echo "[ERROR] File not found: " ${APR_UTIL}-${APR_UTIL_VERSION}.tar.gz
     exit 1;
@@ -113,16 +122,17 @@ make install all
 # ============================================================================ #
 
 cd $ROOT
-mkdir -f nvidia_gdk_download
+mkdir -p nvidia_gdk_download
 cd nvidia_gdk_download
 NVIDIA_BASE_URL="http://developer.download.nvidia.com"
 NVIDIA_GDK="gdk_linux_amd64_352_55_release.run"
-wget ${NVIDIA_BASE_URL}/compute/cuda/7.5/Prod/gdk/${NVIDIA_GDK}
+wget ${NVIDIA_BASE_URL}/compute/cuda/7.5/Prod/gdk/${NVIDIA_GDK} -O ${NVIDIA_GDK}
 if [ ! -f ${NVIDIA_GDK} ]; then
     echo "[ERROR] File not found: " ${NVIDIA_GDK}
     exit 1;
 fi
 chmod +x ${NVIDIA_GDK}
+rm -f ${INSTALL_PATH_NVIDIA}/usr/bin/nvvs
 ./${NVIDIA_GDK} --silent --installdir=${INSTALL_PATH_NVIDIA}
 
 # ============================================================================ #
@@ -133,17 +143,17 @@ chmod +x ${NVIDIA_GDK}
 # DEPENDENCIES: bison and flex
 #
 cd $ROOT
-wget http://ftp.gnu.org/gnu/bison/bison-3.0.2.tar.gz
-tar zxvf bison-3.0.2.tar.gz
-cd bison-3.0.2
+wget http://ftp.gnu.org/gnu/bison/${BISON}-${BISON_VERSION}.tar.gz -O ${BISON}-${BISON_VERSION}.tar.gz
+tar zxf ${BISON}-${BISON_VERSION}.tar.gz
+cd ${BISON}-${BISON_VERSION}
 ./configure --prefix=${INSTALL_PATH_BISON}
 make
 make install
 
 cd $ROOT
-wget http://prdownloads.sourceforge.net/flex/flex-2.6.0.tar.gz
-tar zxvf flex-2.6.0.tar.gz
-cd flex-2.6.0
+wget http://prdownloads.sourceforge.net/flex/${FLEX}-${FLEX_VERSION}.tar.gz -O ${FLEX}-${FLEX_VERSION}.tar.gz
+tar zxf ${FLEX}-${FLEX_VERSION}.tar.gz
+cd ${FLEX}-${FLEX_VERSION}
 ./configure --prefix=${INSTALL_PATH_FLEX}
 make
 make install
@@ -152,9 +162,9 @@ export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${INSTALL_PATH_FLEX}/lib:${INSTALL_PAT
 export PATH=${PATH}:${INSTALL_PATH_BISON}/bin:${INSTALL_PATH_FLEX}/bin
 
 cd $ROOT
-wget https://fossies.org/linux/misc/lm_sensors-3.4.0.tar.gz
-tar zxvf lm_sensors-3.4.0.tar.gz
-cd lm_sensors-3.4.0
+wget https://fossies.org/linux/misc/${LM_SENSORS}-${LM_SENSORS_VERSION}.tar.gz -O ${LM_SENSORS}-${LM_SENSORS_VERSION}.tar.gz
+tar zxf ${LM_SENSORS}-${LM_SENSORS_VERSION}.tar.gz
+cd ${LM_SENSORS}-${LM_SENSORS_VERSION}
 make PREFIX=${INSTALL_PATH_SENSORS} all
 make PREFIX=${INSTALL_PATH_SENSORS} install
 
@@ -167,9 +177,10 @@ make PREFIX=${INSTALL_PATH_SENSORS} install
 # DEPENDENCIES: libxml2 libxml2-dev bison flex libcdk5-dev libavahi-client-dev cmake
 #
 cd $ROOT
+rm -rf libiio
 git clone https://github.com/analogdevicesinc/libiio.git
 cd libiio
-mkdir -f ${INSTALL_PATH_LIBIIO}
+mkdir -p ${INSTALL_PATH_LIBIIO}
 cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_PATH_LIBIIO} ./
 make all
 make install
